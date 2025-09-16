@@ -3,14 +3,16 @@ import os
 import pandas as pd
 import duckdb
 import folium
+import simplekml
 
 
 # vérifier si le fichier sites existe ou pas
 if not os.path.exists("data/sites.csv"):
     logging.error("There is no data")
 
-#lecture du fichier csv
+# lecture du fichier csv
 sites_df = pd.read_csv("data/sites.csv")
+
 
 # Fonction de nettoyage simple pour coordonnées ---
 def to_decimal(coord):
@@ -31,6 +33,7 @@ def to_decimal(coord):
             decimal = -decimal
         return decimal
 
+
 # Appliquer aux colonnes latitude/longitude ---
 sites_df["latitude"] = sites_df["latitude"].apply(to_decimal)
 sites_df["longitude"] = sites_df["longitude"].apply(to_decimal)
@@ -45,12 +48,25 @@ con.close()
 m = folium.Map(location=[46.6, 2.5], zoom_start=6)
 
 # Ajouter des marqueurs
-for lat, long, site in zip(sites_df["latitude"], sites_df["longitude"], sites_df["site_id"]):
+for lat, long, site in zip(
+    sites_df["latitude"], sites_df["longitude"], sites_df["site_id"]
+):
     folium.Marker(
-        [lat, long],
-        popup=f"Site ID : {site}",
-        tooltip=f"Site {site}"
+        [lat, long], popup=f"Site ID : {site}", tooltip=f"Site {site}"
     ).add_to(m)
 
 # Sauvegarde
-m.save("sites_map.html")
+m.save("output/sites_map.html")
+
+
+# Créer un objet KML
+kml = simplekml.Kml()
+
+# Ajouter un point (latitude, longitude)
+for lat, long, site in zip(
+    sites_df["latitude"], sites_df["longitude"], sites_df["site_id"]
+):
+    kml.newpoint(name=f"Site {site}", coords=[(lat, long)])
+
+# Sauvegarder dans un fichier .kml
+kml.save("output/sites.kml")
