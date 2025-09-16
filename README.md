@@ -1,9 +1,7 @@
-Description :
+🎯 Objectif du projet
 
-Entrée : coordonnées GPS (CSV).
+⚙️ Installation : comment installer les dépendances (pip install -r requirements.txt)
 
-Conversion en Lambert / autres projections.
+🚀 Exécution : comment lancer le script (python src/main.py)
 
-Génération d’un fichier KML pour afficher les points sur Google Earth.
-
-#Option : calculer la distance entre sites (scipy).
+📊 Résultats : exemples de la carte générée et du fichier KML
