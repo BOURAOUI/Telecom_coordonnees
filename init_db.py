@@ -46,6 +46,6 @@ df = pd.DataFrame({
 })
 
 # Sauvegarde dans un CSV
-df.to_csv("/data/sites.csv", index=False)
+df.to_csv("./data/sites.csv", index=False)
 
 print("✅ Fichier 'sites.csv' généré avec", N, "sites.")
