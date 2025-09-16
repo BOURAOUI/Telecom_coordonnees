@@ -5,7 +5,7 @@ import pandas as pd
 import duckdb
 
 # vérifier si le fichier sites existe ou pas
-if "/data/sites.csv" is not in os.listdir("data"):
+if "/data/sites.csv" not in os.listdir("data"):
     logging.error("There is no data")
 
 #lecture du fichier csv
