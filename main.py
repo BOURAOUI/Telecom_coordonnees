@@ -1,6 +1,7 @@
 import logging
 import os
 import pandas as pd
+import duckdb
 
 
 # vérifier si le fichier sites existe ou pas
@@ -10,64 +11,30 @@ if not os.path.exists("data/sites.csv"):
 #lecture du fichier csv
 sites_df = pd.read_csv("data/sites.csv")
 
-#Convertir les latitudes
-def lat_degmin_to_decimal(coord: str) -> float:
+# --- 2. Fonction de nettoyage simple pour coordonnées ---
+def to_decimal(coord):
     """
-    """
-    try:
-        deg_part, rest = coord.split("°")
-        min_part, direction = rest.split("'")
-    except ValueError:
-        raise ValueError("Format attendu: ex '48°51.40'N' ou '34°36.22'S'")
-
-    degrees = float(deg_part)
-    minutes = float(min_part)
-
-    decimal = degrees + minutes / 60
-
-    # Latitude Sud doit être négative
-    if direction.strip().upper() == "S":
-        decimal = -decimal
-
-    return decimal
-
-
-#Convertir les longitudes
-def lon_degmin_to_decimal(coord: str) -> float:
-    """
+    Convertit une coordonnée:
+    - Si c'est déjà un nombre -> float
+    - Si c'est un string style "48°51.40'N" -> convertit en décimal
     """
     try:
-        deg_part, rest = coord.split("°")
-        min_part, direction = rest.split("'")
-    except ValueError:
-        raise ValueError("Format attendu: ex '2°21.13'E' ou '58°22.90'W'")
+        # Cas déjà en décimal
+        return float(coord)
+    except:
+        # Cas degrés/minutes (format: 48°51.40'N)
+        deg, rest = coord.split("°")
+        minutes, direction = rest.split("'")
+        decimal = float(deg) + float(minutes) / 60
+        if direction in ["S", "W"]:
+            decimal = -decimal
+        return decimal
 
-    degrees = float(deg_part)
-    minutes = float(min_part)
+# --- 3. Appliquer aux colonnes latitude/longitude ---
+sites_df["latitude"] = sites_df["latitude"].apply(to_decimal)
+sites_df["longitude"] = sites_df["longitude"].apply(to_decimal)
 
-    decimal = degrees + minutes / 60
-
-    # Longitude Ouest doit être négative
-    if direction.strip().upper() == "W":
-        decimal = -decimal
-
-    return decimal
-
-
-for lat in sites_df["latitude"]:
-    if "°" not in str(lat):
-        if (lat >= 41.3) & (lat <= 51.1):
-            lat_degmin_to_decimal(str(lat))
-        else:
-            print("Latitude pas en France")
-
-for lon in sites_df["longitude"]:
-    if "°" not in str(lon):
-        if (lon >= -5.1) & (lon <= 9.6):
-            lon_degmin_to_decimal(str(lon))
-        else:
-            print("Longitude pas en France")
-
-
-
-
+# --- 4. Sauvegarder dans DuckDB ---
+con = duckdb.connect("data/sites.duckdb")
+con.execute("CREATE OR REPLACE TABLE sites AS SELECT * FROM sites_df")
+con.close()
