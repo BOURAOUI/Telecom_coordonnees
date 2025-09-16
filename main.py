@@ -2,6 +2,7 @@ import logging
 import os
 import pandas as pd
 import duckdb
+import folium
 
 
 # vérifier si le fichier sites existe ou pas
@@ -11,7 +12,7 @@ if not os.path.exists("data/sites.csv"):
 #lecture du fichier csv
 sites_df = pd.read_csv("data/sites.csv")
 
-# --- 2. Fonction de nettoyage simple pour coordonnées ---
+# Fonction de nettoyage simple pour coordonnées ---
 def to_decimal(coord):
     """
     Convertit une coordonnée:
@@ -30,11 +31,26 @@ def to_decimal(coord):
             decimal = -decimal
         return decimal
 
-# --- 3. Appliquer aux colonnes latitude/longitude ---
+# Appliquer aux colonnes latitude/longitude ---
 sites_df["latitude"] = sites_df["latitude"].apply(to_decimal)
 sites_df["longitude"] = sites_df["longitude"].apply(to_decimal)
 
-# --- 4. Sauvegarder dans DuckDB ---
+# Sauvegarder dans DuckDB ---
 con = duckdb.connect("data/sites.duckdb")
 con.execute("CREATE OR REPLACE TABLE sites AS SELECT * FROM sites_df")
 con.close()
+
+
+# Créer une carte centrée sur le centre de la France
+m = folium.Map(location=[46.6, 2.5], zoom_start=6)
+
+# Ajouter des marqueurs
+for lat, long, site in zip(sites_df["latitude"], sites_df["longitude"], sites_df["site_id"]):
+    folium.Marker(
+        [lat, long],
+        popup=f"Site ID : {site}",
+        tooltip=f"Site {site}"
+    ).add_to(m)
+
+# Sauvegarde
+m.save("sites_map.html")
