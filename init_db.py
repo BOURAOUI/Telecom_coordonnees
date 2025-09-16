@@ -3,7 +3,7 @@ import random
 import math
 
 # Nombre de sites à générer
-N = 1000
+N = 10
 
 def decimal_to_degmin(value, is_lat=True):
     """Convertit une coordonnée décimale en degrés minutes (WGS84)."""
